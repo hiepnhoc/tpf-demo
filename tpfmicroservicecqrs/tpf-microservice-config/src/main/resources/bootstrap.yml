@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: tpf-microservice-config
+  cloud:
+    config:
+      enabled: true
+      server:
+        git:
+          uri: https://tvd27285@bitbucket.org/tvd27285/tpfconfigserver.git
+          default-label: tpf-config
+      label: tpf-config
+    
+security:
+  user:
+    password: password
+    
+server:
+  port: ${PORT:8888} 
+
+

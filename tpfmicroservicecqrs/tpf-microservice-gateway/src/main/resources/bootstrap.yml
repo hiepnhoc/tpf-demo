@@ -1,0 +1,18 @@
+spring:  
+  application:
+    name: tpf-microservice-gateway
+  cloud:
+    config:
+      enabled: true
+      uri: ${vcap.services.configserver.credentials.uri:http://tpf-microservice-config:8888}
+      label: tpf-config
+
+security:
+  basic:
+    enable: false 
+#spring:
+#  profiles: docker
+#  cloud:
+#  config:
+#    uri: http://configserver:8888
+#    fail-fast: true

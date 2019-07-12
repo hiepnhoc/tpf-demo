@@ -1,0 +1,6 @@
+---
+applications:
+- name: tpf-microservice-config
+  memory: 768M
+  host: tpf-microservice-config
+  domain: local.pcfdev.io

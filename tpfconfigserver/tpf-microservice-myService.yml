@@ -1,0 +1,72 @@
+server:
+  port: ${PORT:9000}
+  
+spring:
+  datasource:
+    className: org.postgresql.ds.PGSimpleDataSource
+    databaseName: postgres
+    url: jdbc:postgresql://postgres:5432/postgres
+    username: postgres
+    password: admin
+    initialization-mode: always
+    initialize: true
+    schema: classpath:/schema.sql
+    continue-on-error: true
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        ddl-auto: false
+        show-sql: false
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    virtual-host: /
+    username: admin
+    password: admin
+
+  cloud:
+    config:
+      uri: http://localhost:8888
+      label: master
+      fail-fast: false
+
+
+eureka:
+  client:
+    service-url:
+      default-zone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 1
+    lease-expiration-duration-in-seconds: 2
+
+ribbon:
+  eureka:
+    enabled: true
+
+axon:
+  amqp:
+    exchange: service.events.fanout.exchange
+    transaction-mode: none
+    durable-messages: true
+
+external:
+  amqp:
+    exchange:
+      fanout:
+        auto-delete: false
+    bind:
+      route-key: "*"
+    queue: service.default.queue
+  event-sourcing:
+        events-collection-name: service-events
+        snapshot-collection-name: service-events-snapshots
+
+logging:
+    level:
+        root: INFO
+        org.springframework: INFO
+        org.axonframework: INFO
+        app: INFO

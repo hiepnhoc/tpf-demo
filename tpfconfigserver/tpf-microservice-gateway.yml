@@ -1,0 +1,53 @@
+server:  
+  port: ${PORT:8765}
+
+spring:  
+  datasource:
+    className: org.postgresql.ds.PGSimpleDataSource
+    databaseName: postgres
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: admin
+    initialization-mode: always
+    initialize: true
+    continue-on-error: true
+          
+logging:
+  level:
+    org.springframework.cloud.netflix.zuul: TRACE
+      
+zuul:
+  routes:  
+    command:
+      path: /myService/**
+      sensitiveHeaders:
+      serviceId: tpf-microservice-myService
+      
+eureka:
+  instance:
+    metadata-map:
+      instanceId: ${spring.applicaiton.name}:${spring.application.instance_id:${random.value}}
+#    leaseRenewalIntervalInSeconds: 1 # better stick with the default in production.
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+#security:
+#  user:
+#    name: root
+#    password: password
+#  oauth2:
+#    client:
+#      accessTokenUri: http://localhost:8765/uua/oauth/token
+#      userAuthorizationUri: http://localhost:8765/uua/oauth/authorize
+#      clientAuthenticationScheme: form
+#    resource:
+#      userInfoUri: http://localhost:8765/uaa/user
+#      preferTokenInfo: false  
+#  sessions: ALWAYS 
+#  
+#proxy:
+#  auth:
+#    routes:
+#      command: oauth2
+#      query: oauth2

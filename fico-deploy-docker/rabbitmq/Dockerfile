@@ -1,0 +1,13 @@
+FROM rabbitmq:3-management
+
+ENV GROUP_DOCKER dkit
+ENV GROUP_DOCKER_ID 1200
+ENV USER_RABBITMQ dk-rabbitmq
+ENV ID_RABBITMQ 1201
+# Add user
+RUN groupadd -g $GROUP_DOCKER_ID $GROUP_DOCKER
+RUN useradd -u $ID_RABBITMQ -ms /bin/bash -g $GROUP_DOCKER $USER_RABBITMQ
+
+#Change user
+USER $USER_RABBITMQ
+

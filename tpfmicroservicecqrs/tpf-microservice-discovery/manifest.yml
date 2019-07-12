@@ -1,0 +1,8 @@
+---
+applications:
+- name: tpf-microservice-discovery
+  memory: 768M
+  host: tpf-microservice-discovery
+  domain: local.pcfdev.io
+  services:
+  - tpf-microservice-config

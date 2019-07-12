@@ -1,0 +1,177 @@
+version: "3"
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    networks:
+      - LOCAL_NET
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    volumes:
+      - '/home/it/DATA/rabbitmq/data:/var/lib/rabbitmq'
+      - '/home/it/DATA/rabbitmq/log:/var/log//rabbitmq'
+      - '/home/it/DATA/rabbitmq/config:/etc/rabbitmq'
+
+  haproxy:
+    image: haproxy:latest
+    restart: always
+    container_name: haproxy
+    hostname: haproxy
+    networks:
+      - LOCAL_NET
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+      - "1883:1883"
+      - "7980:7980"
+      - "8080:8080"
+    expose:
+      - '15672'
+      - '5672'
+      - '1883'
+      - '7980'
+      - '8080'
+    volumes:
+      - '/home/it/DATA/haproxy/config:/usr/local/etc/haproxy/'
+      - '/home/it/DATA/haproxy/run:/var/run/haproxy/'
+
+  oauth2svr:
+    image: openjdk:8
+    restart: always
+    container_name: oauth2svr
+    hostname: oauth2svr
+    networks:
+      - LOCAL_NET
+    expose:
+      - '8080'
+    volumes:
+      - '/home/it/DATA/oauth2:/opt/oauth2'
+    working_dir: /opt/oauth2
+    command: bash -c "cd /opt/oauth2 && java -jar oauth2-server.jar"
+    stdin_open: true
+    tty: true
+    depends_on:
+      - rabbitmq
+
+  postgres:
+    container_name: postgres
+    hostname: postgres
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      PGhome/it/DATA: /data/postgres
+    volumes:
+       - /home/it/DATA/postgres/data:/data/postgres
+       - /home/it//DATA/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - LOCAL_NET
+    restart: unless-stopped
+
+  config-service:
+    image: tpf/tpf-microservice-config
+    container_name: tpf-microservice-config
+    hostname: tpf-microservice-config
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - CONFIG_REPO_URI=https://bitbucket.org/tvd27285/tpfconfigserver/src/tpf-config/
+    networks:
+      - LOCAL_NET
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
+  discovery-service:
+    image: tpf/tpf-microservice-discovery
+    container_name: tpf-microservice-discovery
+    hostname: tpf-microservice-discovery
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - LOCAL_NET
+    entrypoint: ./wait-for-it.sh tpf-microservice-config:8888 -t 60 --
+    command: java -Dspring.profiles.active=docker -jar /app.jar
+    restart: unless-stopped
+    depends_on:
+      - config-service
+
+  command-service:
+    image: tpf/tpf-microservice-myservice
+    container_name: tpf-microservice-myservice
+    hostname: tpf-microservice-myservice
+    ports:
+      - "9000:9000"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - LOCAL_NET
+    entrypoint: ./wait-for-it.sh tpf-microservice-config:8888 -t 60 --
+    command: java -Dspring.profiles.active=docker -jar /app.jar
+    restart: unless-stopped
+    depends_on:
+      - rabbitmq
+      - discovery-service
+      - config-service
+
+  gateway-service:
+    image: tpf/tpf-microservice-gateway
+    container_name: tpf-microservice-gateway
+    hostname: tpf-microservice-gateway
+    ports:
+      - "8765:8765"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - LOCAL_NET
+    entrypoint: ./wait-for-it.sh tpf-microservice-config:8888 -t 60 --
+    command: java -Dspring.profiles.active=docker -jar /app.jar
+    depends_on:
+      - config-service
+      - discovery-service
+    restart: unless-stopped
+  
+  consumer1:
+    image: openjdk:8
+    restart: always
+    container_name: consumer1
+    hostname: consumer1
+    networks:
+      - LOCAL_NET
+    volumes:
+      - '/home/it/DATA/consumer:/opt/consumer'
+    working_dir: /opt/consumer
+    command: bash -c "cd /opt/consumer && java -jar tpf-consumer-0.0.1-SNAPSHOT.jar"
+    stdin_open: true
+    tty: true
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
+  consumer2:
+    image: openjdk:8
+    restart: always
+    container_name: consumer2
+    hostname: consumer2
+    networks:
+      - LOCAL_NET
+    volumes:
+      - '/home/it/DATA/consumer:/opt/consumer'
+    working_dir: /opt/consumer
+    command: bash -c "cd /opt/consumer && java -jar tpf-consumer-0.0.1-SNAPSHOT.jar"
+    stdin_open: true
+    tty: true
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
+
+networks:
+  LOCAL_NET:

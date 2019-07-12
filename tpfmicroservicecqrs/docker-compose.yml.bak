@@ -1,0 +1,53 @@
+version: '2'
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=test
+      - RABBITMQ_DEFAULT_PASS=password
+
+  config-service:
+    image: tpf/tpf-microservice-config
+    container_name: tpf-microservice-config
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - CONFIG_REPO_URI=https://bitbucket.org/tvd27285/tpfconfigserver/src/tpf-config/
+    depends_on:
+      - rabbitmq
+
+  discovery-service:
+    image: tpf/tpf-microservice-discovery
+    container_name: tpf-microservice-discovery
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  gateway-service:
+    image: tpf/tpf-microservice-gateway
+    container_name: tpf-microservice-gateway
+    ports:
+      - "8765:8765"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - tpf-microservice-config
+      - tpf-microservice-discovery
+
+  command-service:
+    image: tpf/tpf-microservice-myService
+    container_name: tpf-microservice-myService
+    ports:
+      - "9000:9000"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - rabbitmq
+      - tpf-microservice-discovery
+      - tpf-microservice-config

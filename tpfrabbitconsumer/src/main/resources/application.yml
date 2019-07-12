@@ -1,0 +1,33 @@
+spring:
+  cloud:
+    stream:
+      bindings:
+        message-sink :
+         destination: amq.topic
+         binder: rabbit
+         group: tpf.queue
+         consumer :
+           concurrency: 1
+      rabbit:
+        bindings:
+          message-sink:
+            consumer:
+              durableSubscription: true
+              declareExchange: true
+              exchangeDurable: true
+              exchangeType: topic
+              queueNameGroupOnly: true
+  rabbitmq:
+    host: 10.0.0.19
+#    port: 1883
+    password: springy
+    username: springy
+
+tpf:
+  config:
+    mq:
+      account:
+        in: account_in
+    gateway:
+      host: 10.0.0.19
+      port: 8765
