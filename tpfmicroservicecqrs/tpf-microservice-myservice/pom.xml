@@ -17,7 +17,7 @@
         <spring-retry-version>1.2.1.RELEASE</spring-retry-version>
         <hibernate.em.version>5.2.10.Final</hibernate.em.version>
         <hibernate.javax.version>1.0.0.Final</hibernate.javax.version>
-        <postgre.version>42.2.5</postgre.version>
+        <postgre.version>42.3.3</postgre.version>
     </properties>
 
     <dependencies>
